@@ -135,7 +135,7 @@ p {
 }
 
 .text-second {
-  /* ただのバイトじゃ、終わらせない。 全国展開を見据えるお店の“仲間”を募集します。 */
+  /* ただのバイトじゃ、終わらせない。全国展開を見据えるお店の“仲間”を募集します。 */
 
   position: absolute;
   /* width: 403px; */
@@ -185,7 +185,7 @@ p {
 }
 
 .link-bg-brown p {
-  /* まずはお気軽にご連絡ください！ 「話だけ聞いてみたい」も大歓迎です。 */
+  /* まずはお気軽にご連絡ください！「話だけ聞いてみたい」も大歓迎です。 */
   position: static;
   width: 292px;
   height: 64px;
@@ -423,7 +423,9 @@ p {
   background-color: var(--border-color);
 }
 
-
+.footer-info p{
+  display: none;
+}
 @media (max-width: 1200px) {
   .hero-right {
     right: -350px;
@@ -1261,9 +1263,19 @@ top: 1240px; */
 }
 
 @media (max-width: 768px) {
-  .message-section {
-    padding: 100px 20px;
+  .request-section{
+    padding: 0px 0px 0px 0px;
   }
+  .gallery-section {
+    padding: 0px 0px;
+  }
+    .message-section {
+        background: url(./images/26677898.png);
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center;
+        padding: 100px 20px;
+    }
 
   .message-section .background-title {
     display: none;
@@ -1428,9 +1440,7 @@ top: 1240px; */
     gap: 40px;
   }
 
-  .vertical-subtitle {
-    display: none;
-  }
+
 
   .details-sidebar {
     display: none;
@@ -1468,7 +1478,7 @@ top: 1240px; */
 
 .gallery-scroll-container {
   display: flex;
-  overflow-x: auto;
+  
   gap: 10px;
   -ms-overflow-style: none;
   /* IE and Edge */
@@ -1598,12 +1608,13 @@ top: 1240px; */
     padding: 0 40px;
   }
 
-  .entry-text {
-    text-align: center;
-    margin-top: 90px !important;
-  }
+.entry-text {
+        text-align: center;
+        margin-top: 38px !important;
+    }
 
   .entry-buttons {
+    padding: 0px;
     margin-top: 200px;
   }
 }
@@ -1712,7 +1723,7 @@ top: 1240px; */
 @media (max-width: 1200px) {
   .footer-main {
     flex-wrap: wrap;
-    gap: 60px;
+    gap: 0px;
     padding: 0 40px;
   }
 
@@ -1720,7 +1731,7 @@ top: 1240px; */
     width: 100%;
     order: -1;
     padding-left: 0;
-    text-align: center;
+    text-align: start;
   }
 
   .footer-tagline p {
@@ -1751,8 +1762,7 @@ top: 1240px; */
 
   .footer-main {
     flex-direction: column;
-    align-items: center;
-    text-align: center;
+   
   }
 
   .footer-nav {
@@ -1760,7 +1770,10 @@ top: 1240px; */
     gap: 20px;
     align-items: center;
   }
-
+.vertical-subtitle{
+  position: static;
+  writing-mode: horizontal-tb;
+}
   .nav-column {
     align-items: center;
   }
@@ -1770,6 +1783,20 @@ top: 1240px; */
     gap: 20px;
     padding: 0 20px;
   }
+  .footer-address{
+    margin-bottom: 45px;
+    font-size: 17px;
+  }
+ .privacy-policy:nth-child(1){
+  display: none;
+ }
+ .footer-info p{
+  font-size: 19px;
+  display: block;
+}
+.copyright {
+    font-size: 16px;
+}
 }
 
 
@@ -1865,7 +1892,7 @@ top: 1240px; */
   }
   
   .page-wrapper {
-    padding: 0 10px;
+    padding: 0 0px;
   }
   
   .header-logo {
@@ -1888,9 +1915,21 @@ top: 1240px; */
     width: 100%;
   }
   
-  .decor-line-red, .decor-line-yellow {
-    width: 100%;
-  }
+
+
+    .decor-line-yellow {
+        width: 100%;
+        position: absolute;
+        /* left: 50%; */
+        transform: translate(-397px, 2197px);
+        width: 100%;
+        pointer-events: none;
+        /* height: 5190px; */
+    }
+.decor-line-red {
+        width: 100%;
+        transform: translate(-386px, 1132px);
+    }
   
   .map-underline {
     width: 100%;
@@ -1994,11 +2033,12 @@ top: 1240px; */
     margin-bottom: 50px;
   }
 
-  .details-content {
-    padding-left: 0;
+  .faq-part{
+    padding: 30px;
   }
 
   .recruit-part {
+    padding-left: 30px;
     width: 100%;
     justify-content: center;
   }
@@ -2190,6 +2230,9 @@ top: 1240px; */
   .container {
     padding: 0 20px;
   }
+.gallery-scroll-container img:first-child {
+  width: 90%;
+}
 
   .link-bg-brown {
     display: none !important;
@@ -2250,9 +2293,9 @@ top: 1240px; */
     width: 100% !important;
   }
 
-  .background-decor {
+  /* .background-decor {
     top: 1560px !important;
-  }
+  } */
 }
 
 @media screen and (max-width:750px) {
@@ -2283,7 +2326,8 @@ top: 1240px; */
   }
 
   .footer-bottom {
-    text-align: center;
+    padding: 0px;
+    text-align: start;
   }
 }
 
@@ -2398,12 +2442,12 @@ top: 1240px; */
 
   .text-first {
     margin-top: 320px;
-    margin-left: -120px;
+    margin-left: 0px;
   }
 
   .text-second {
     margin-top: 380px;
-    margin-left: -120px;
+    margin-left: 0px;
   }
 
   .gallery-img-2 {
@@ -2414,10 +2458,13 @@ top: 1240px; */
     width: 68%;
   }
 
-  .entry-buttons {
-    width: 100% !important;
-  }
-
+     .entry-buttons {
+     
+        width: 91% !important;
+    }
+.entry-button-text{
+   padding: 0px;
+}
   .entry-content {
     padding: 0;
   }
