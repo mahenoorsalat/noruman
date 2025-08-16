@@ -14,11 +14,11 @@ function initHeroSlideshow() {
     const heroImages = document.querySelectorAll('.header-img img');
     if (heroImages.length > 1) {
         let currentIndex = 0;
-        
+
         // Hide all images except first
         gsap.set(heroImages, { opacity: 0 });
         gsap.set(heroImages[0], { opacity: 1 });
-        
+
         setInterval(() => {
             const nextIndex = (currentIndex + 1) % heroImages.length;
             gsap.to(heroImages[currentIndex], { opacity: 0, duration: 1 });
@@ -36,14 +36,14 @@ function initAboutAnimations() {
     // Main title and center cake image fade in first
     gsap.set('.about-title', { opacity: 0, y: 30 });
     gsap.set('.gallery-img-2', { opacity: 0, scale: 0.8 }); // Center strawberry cake
-    
+
     // Surrounding images (delayed fade in)
-    gsap.set(['.gallery-img-1', '.gallery-img-3', '.gallery-img-4', '.gallery-img-5', '.gallery-img-6'], { 
-        opacity: 0, 
+    gsap.set(['.gallery-img-1', '.gallery-img-3', '.gallery-img-4', '.gallery-img-5', '.gallery-img-6'], {
+        opacity: 0,
         y: 50,
         scale: 0.9
     });
-    
+
     // Create timeline for About section
     const aboutTl = gsap.timeline({
         scrollTrigger: {
@@ -52,7 +52,7 @@ function initAboutAnimations() {
             once: true
         }
     });
-    
+
     aboutTl
         .to('.about-title', { opacity: 1, y: 0, duration: 1 })
         .to('.gallery-img-2', { opacity: 1, scale: 1, duration: 1 }, "-=0.5")
@@ -63,7 +63,7 @@ function initAboutAnimations() {
             duration: 1,
             stagger: 0.2
         }, "+=1");
-    
+
     // Parallax effect for gallery images
     gsap.utils.toArray('.about-gallery img').forEach(img => {
         gsap.to(img, {
@@ -97,24 +97,24 @@ function initStepsAnimations() {
             }
         });
     }
-    
+
     // Sticky graph behavior
     const graphContainer = document.querySelector('.graph-container');
     if (graphContainer) {
         ScrollTrigger.create({
             trigger: '.steps-left',
             start: 'top center',
-            end: () => document.querySelector('.step-card-last') ? 
-                  document.querySelector('.step-card-last').offsetTop : 'bottom center',
+            end: () => document.querySelector('.step-card-last') ?
+                document.querySelector('.step-card-last').offsetTop : 'bottom center',
             pin: graphContainer,
             pinSpacing: false
         });
     }
-    
+
     // Step cards animation
     gsap.utils.toArray('.step-card, .step-card-last').forEach((card, index) => {
         gsap.set(card, { opacity: 0, x: -50 });
-        
+
         gsap.to(card, {
             opacity: 1,
             x: 0,
@@ -134,19 +134,19 @@ function initStepsAnimations() {
 
 function initRequestAnimations() {
     const requestCards = document.querySelectorAll('.request-card');
-    
+
     requestCards.forEach((card, index) => {
         const img = card.querySelector('img');
         const overlay = card.querySelector('.card-overlay');
         const textContent = card.querySelector('.card-text-content');
-        
-        // Initial state
-        gsap.set(card, { opacity: 0, y: 30 });
-        
-        // Card reveal animation
-        gsap.to(card, {
-            opacity: 1,
-            y: 0,
+
+        // Initial state (opacity hidden + shift down from CSS position)
+        gsap.set(card, { opacity: 0, y: "+=30" }); 
+
+        // Card reveal animation (fade in + return to CSS position)
+        gsap.to(card, { 
+            opacity: 1, 
+            y: "-=30",   // animate back to its original CSS translateY
             duration: 0.8,
             scrollTrigger: {
                 trigger: card,
@@ -155,35 +155,37 @@ function initRequestAnimations() {
             },
             delay: index * 0.1
         });
-        
+
         // Hover animations
         card.addEventListener('mouseenter', () => {
             gsap.to(img, { scale: 1.1, duration: 0.3 });
         });
-        
+
         card.addEventListener('mouseleave', () => {
             gsap.to(img, { scale: 1, duration: 0.3 });
         });
-        
+
         // Click functionality for detail text
         const toggleButton = card.querySelector('.toggle-button');
+        const toggleIcon = toggleButton?.querySelector('img'); 
         let isExpanded = false;
-        
+
         if (toggleButton) {
             toggleButton.addEventListener('click', () => {
                 if (!isExpanded) {
-                    // Show detailed text (you'll need to add this content to your HTML)
                     gsap.to(overlay, { opacity: 0.9, duration: 0.3 });
-                    // Add your detail text reveal animation here
+                    if (toggleIcon) toggleIcon.src = "images/5_365.svg"; 
                     isExpanded = true;
                 } else {
                     gsap.to(overlay, { opacity: 0.8, duration: 0.3 });
+                    if (toggleIcon) toggleIcon.src = "images/5_348.svg"; 
                     isExpanded = false;
                 }
             });
         }
     });
 }
+
 
 // =====================
 // MESSAGE SECTION ANIMATIONS
@@ -200,10 +202,10 @@ function initMessageAnimations() {
             ease: 'none'
         });
     }
-    
+
     // Message content fade in
     gsap.set('.message-vertical-title, .message-body', { opacity: 0, y: 30 });
-    
+
     gsap.to('.message-vertical-title, .message-body', {
         opacity: 1,
         y: 0,
@@ -293,7 +295,7 @@ function initFixedCTA() {
             </div>
         </div>
     `;
-    
+
     // Add comprehensive styles to match your design exactly
     const style = document.createElement('style');
     style.textContent = `
@@ -429,36 +431,36 @@ function initFixedCTA() {
             transform: translateX(-50%) translateY(100%);
         }
     `;
-    
+
     document.head.appendChild(style);
     document.body.appendChild(fixedCTA);
-    
+
     // Show CTA when hero is half scrolled
     ScrollTrigger.create({
         trigger: '.header',
         start: 'bottom 50%',
         onEnter: () => {
             fixedCTA.classList.add('show');
-            gsap.to(fixedCTA, { 
-                y: 0, 
-                duration: 0.5, 
-                ease: "back.out(1.7)" 
+            gsap.to(fixedCTA, {
+                y: 0,
+                duration: 0.5,
+                ease: "back.out(1.7)"
             });
         },
         onLeaveBack: () => {
             fixedCTA.classList.remove('show');
-            gsap.to(fixedCTA, { 
-                y: '100%', 
+            gsap.to(fixedCTA, {
+                y: '100%',
                 duration: 0.5,
                 ease: "power2.in"
             });
         }
     });
-    
+
     // Add click tracking for analytics if needed
     const recruitLink = fixedCTA.querySelector('.link-recruit1');
     const entryLink = fixedCTA.querySelector('.link-entry1');
-    
+
     recruitLink.addEventListener('click', (e) => {
         e.preventDefault();
         gsap.to(window, {
@@ -470,7 +472,7 @@ function initFixedCTA() {
             ease: "power2.out"
         });
     });
-    
+
     entryLink.addEventListener('click', (e) => {
         e.preventDefault();
         gsap.to(window, {
@@ -492,13 +494,13 @@ function initFixedCTA() {
 // MODAL FUNCTIONALITY
 // =====================
 function initModals() {
-  const lineButton = document.querySelector('a[href*="line"], .entry-button:nth-child(2)');
-  const instagramButton = document.querySelector('a[href*="instagram"], .entry-button:nth-child(3)');
+    const lineButton = document.querySelector('a[href*="line"], .entry-button:nth-child(2)');
+    const instagramButton = document.querySelector('a[href*="instagram"], .entry-button:nth-child(3)');
 
-  function createModal(qrImageSrc, caption) {
-    const modal = document.createElement('div');
-    modal.className = 'qr-modal';
-    modal.innerHTML = `
+    function createModal(qrImageSrc, caption) {
+        const modal = document.createElement('div');
+        modal.className = 'qr-modal';
+        modal.innerHTML = `
       <div class="modal-overlay"></div>
       <div class="modal-box">
         <button class="modal-close"><img src="./images/close.png"/></button>
@@ -509,9 +511,9 @@ function initModals() {
       </div>
     `;
 
-    // ===== CSS styling to match the screenshot =====
-    const style = document.createElement('style');
-    style.textContent = `
+        // ===== CSS styling to match the screenshot =====
+        const style = document.createElement('style');
+        style.textContent = `
       .qr-modal {
         position: fixed;
         top: 0; left: 0; right: 0; bottom: 0;
@@ -567,49 +569,49 @@ function initModals() {
         color: #000;
       }
     `;
-    document.head.appendChild(style);
+        document.head.appendChild(style);
 
-    document.body.appendChild(modal);
+        document.body.appendChild(modal);
 
-    // Close functionality
-    modal.querySelector('.modal-close').addEventListener('click', () => {
-      gsap.to(modal, {
-        opacity: 0,
-        duration: 0.3,
-        onComplete: () => {
-          modal.style.pointerEvents = 'none';
+        // Close functionality
+        modal.querySelector('.modal-close').addEventListener('click', () => {
+            gsap.to(modal, {
+                opacity: 0,
+                duration: 0.3,
+                onComplete: () => {
+                    modal.style.pointerEvents = 'none';
+                }
+            });
+        });
+
+        return modal;
+    }
+
+    if (window.innerWidth > 768) {
+        if (lineButton) {
+            const lineModal = createModal(
+                'line-qr.png', // Replace with actual QR code image path
+                'NORUMANを友だち登録して、ご応募ください。'
+            );
+            lineButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                lineModal.style.pointerEvents = 'auto';
+                gsap.to(lineModal, { opacity: 1, duration: 0.3 });
+            });
         }
-      });
-    });
 
-    return modal;
-  }
-
-  if (window.innerWidth > 768) {
-    if (lineButton) {
-      const lineModal = createModal(
-        'line-qr.png', // Replace with actual QR code image path
-        'NORUMANを友だち登録して、ご応募ください。'
-      );
-      lineButton.addEventListener('click', (e) => {
-        e.preventDefault();
-        lineModal.style.pointerEvents = 'auto';
-        gsap.to(lineModal, { opacity: 1, duration: 0.3 });
-      });
+        if (instagramButton) {
+            const igModal = createModal(
+                'instagram-qr.png', // Replace with actual QR code image path
+                'Instagramでフォローしてご応募ください。'
+            );
+            instagramButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                igModal.style.pointerEvents = 'auto';
+                gsap.to(igModal, { opacity: 1, duration: 0.3 });
+            });
+        }
     }
-
-    if (instagramButton) {
-      const igModal = createModal(
-        'instagram-qr.png', // Replace with actual QR code image path
-        'Instagramでフォローしてご応募ください。'
-      );
-      instagramButton.addEventListener('click', (e) => {
-        e.preventDefault();
-        igModal.style.pointerEvents = 'auto';
-        gsap.to(igModal, { opacity: 1, duration: 0.3 });
-      });
-    }
-  }
 }
 
 
@@ -624,7 +626,7 @@ function initSmoothScrolling() {
             e.preventDefault();
             const targetId = link.getAttribute('href').substring(1);
             const targetElement = document.getElementById(targetId);
-            
+
             if (targetElement) {
                 gsap.to(window, {
                     duration: 1.5,
@@ -654,11 +656,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initFixedCTA();
     initModals();
     initSmoothScrolling();
-    
+
     // General fade-in animations for other elements
     gsap.utils.toArray('.details-section, .entry-section').forEach(section => {
         gsap.set(section.children, { opacity: 0, y: 30 });
-        
+
         gsap.to(section.children, {
             opacity: 1,
             y: 0,

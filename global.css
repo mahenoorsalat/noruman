@@ -1540,10 +1540,12 @@ top: 1240px; */
 }
 
 .entry-text p {
-  font-size: 16px;
-  line-height: 32px;
-  width: 340px;
-  text-align: left;
+    margin-top: 45px;
+    font-size: 16px;
+    line-height: 32px;
+    width: 340px;
+    text-align: left;
+    margin-left: 190px;
 }
 
 .entry-buttons {
@@ -1693,7 +1695,7 @@ top: 1240px; */
   line-height: 1.2;
 }
 
-.nav-column a:first-child {
+.nav-column a:hover {
   text-decoration: underline;
 }
 
@@ -2656,23 +2658,111 @@ top: 1240px; */
     font-size: 15px !important;
   }
 
-  .text-first,
-  .text-second {
-    margin-left: -155px;
-  }
+ 
+    .text-first {
+        padding-left: 108px;
+        margin-top: 150px;
+    }
+.header-links{
+  justify-content: center;
+}
+    .about-text {
+        padding: 30px;
+        margin-top: 50px;
+    }
+    .gallery-img-4{
+          padding-left: 20px;
+    width: 112px !important;
+    height: 152px !important;
 
-  .text-first {
-    margin-top: 150px;
-  }
+    }
+      .gallery-img-3 {
+        width: 200px !important;
+        height: 150px !important;
+    }
+       .gallery-img-6 {
+        width: 200px !important;
+        height: 150px !important;
+    }
+    .gallery-img-2 {
+    width: 321px !important;
+    height: 238px !important;
+    }
+        .gallery-img-5 {
+        width: 96%;
+        height: 277px !important;
+        right: 0 !important;
+        top: 1166px !important;
+    }
+    .steps-main-title {
+    padding: 20px;
+    margin-top: 52px;
+    margin-left: 50px;
+    font-weight: 500;
+    font-size: 21px;
+    line-height: 44px;
+    margin-bottom: 105px;
+}
 
+    .vertical-title-container {
+        padding: 46px;
+        font-size: 16px;
+       display: block;
+    }
+
+    .vertical-title {
+    font-family: 'Libre Baskerville', serif;
+    font-weight: 400;
+    font-size: 110px;
+    opacity: 0.2;
+    line-height: 1;
+}
+.request-intro h3 {
+    font-weight: 500;
+    font-size: 22px;
+    line-height: 24px;
+    letter-spacing: 1.5px;
+}
+.message-img img{
+  width: 236px !important;
+  height: 382px !important;
+}
+    .gallery-img-1{
+              width: 146px !important;
+        height: 200px !important;
+    }
+    .link-bg-white {
+        width: 90%;
+        height: 70px;
+        background: #FFFFFF;
+        box-shadow: 5px 20px 40px rgba(40, 40, 40, 0.08);
+        border-radius: 35px;
+    }
   .text-second {
+     padding-left: 108px;
     margin-top: 180px;
   }
 
   .header {
     height: 900px !important;
   }
+  .entry-text p{
+    margin-top: 30px !important;
+    margin-left: 0px !important;
+  }
+  .entry-text{
+    margin-top: 0px !important;
+  }
+  .background-title{
+    font-size:  200px !important;
+  }
 
+  .entry-buttons{
+    margin-top: 0px !important;
+  }
+.site-footer{
+  padding: 114px 33px 0 !important;
+}
   .header-logo {
     top: 30px !important;
     left: 30px !important;
@@ -2714,5 +2804,7 @@ top: 1240px; */
   .entry-icon {
     margin-right: 20px;
   }
+  
 
 }
+
