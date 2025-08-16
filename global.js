@@ -62,21 +62,23 @@ function initAboutAnimations() {
             scale: 1,
             duration: 1,
             stagger: 0.2
-        }, "+=1");
+        }, "+=0.5");
 
-    // Parallax effect for gallery images
-    gsap.utils.toArray('.about-gallery img').forEach(img => {
-        gsap.to(img, {
-            yPercent: -30,
-            ease: "none",
-            scrollTrigger: {
-                trigger: img,
-                start: "top bottom",
-                end: "bottom top",
-                scrub: true
-            }
+    // Parallax effect for gallery images (only on desktop)
+    if (window.innerWidth > 768) {
+        gsap.utils.toArray('.about-gallery img').forEach(img => {
+            gsap.to(img, {
+                yPercent: -30,
+                ease: "none",
+                scrollTrigger: {
+                    trigger: img,
+                    start: "top bottom",
+                    end: "bottom top",
+                    scrub: 1
+                }
+            });
         });
-    });
+    }
 }
 
 // =====================
@@ -98,33 +100,277 @@ function initStepsAnimations() {
         });
     }
 
-    // Sticky graph behavior
+    // Get all step cards and the last step card
+    const stepCards = gsap.utils.toArray('.step-card');
+    const lastStepCard = document.querySelector('.step-card-last');
+    const stepsRight = document.querySelector('.steps-right');
     const graphContainer = document.querySelector('.graph-container');
-    if (graphContainer) {
-        ScrollTrigger.create({
-            trigger: '.steps-left',
-            start: 'top center',
-            end: () => document.querySelector('.step-card-last') ?
-                document.querySelector('.step-card-last').offsetTop : 'bottom center',
+    const stepsLeft = document.querySelector('.steps-left');
+
+    if (graphContainer && stepsLeft && lastStepCard && stepCards.length > 0) {
+        // Wait for DOM to be ready, then create sticky behavior
+        ScrollTrigger.refresh();
+        
+        // Create sticky behavior that starts when graph bottom hits viewport bottom
+        const stickyTrigger = ScrollTrigger.create({
+            trigger: stepsRight,
+            start: () => {
+                // Start sticky when the graph would start to leave the viewport
+                const graphRect = graphContainer.getBoundingClientRect();
+                const stepsRightRect = stepsRight.getBoundingClientRect();
+                const offset = graphRect.bottom - window.innerHeight;
+                return `+=${Math.max(0, offset)}`;
+            },
+            end: () => {
+                // End when step 05 is reached
+                const step05Rect = lastStepCard.getBoundingClientRect();
+                const stepsRightRect = stepsRight.getBoundingClientRect();
+                const step05Top = lastStepCard.offsetTop;
+                const stepsRightTop = stepsRight.offsetTop;
+                return `+=${step05Top - stepsRightTop + 200}`;
+            },
             pin: graphContainer,
-            pinSpacing: false
+            pinSpacing: false,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+            onToggle: self => {
+                if (self.isActive) {
+                    console.log('Graph is now sticky');
+                    graphContainer.style.zIndex = '100';
+                } else {
+                    console.log('Graph is no longer sticky');
+                    graphContainer.style.zIndex = '';
+                }
+            }
+        });
+
+        // Alternative approach - use a more reliable method
+        // This creates a custom sticky behavior that only activates within steps section
+        let isSticky = false;
+        
+        ScrollTrigger.create({
+            trigger: stepsSection,
+            start: 'top bottom', // Only start checking when steps section is in view
+            end: 'bottom top',   // Stop checking when steps section is out of view
+            onUpdate: self => {
+                const scrollY = window.scrollY;
+                const graphRect = graphContainer.getBoundingClientRect();
+                const stepsRightRect = stepsRight.getBoundingClientRect();
+                const lastStepRect = lastStepCard.getBoundingClientRect();
+                const stepsSectionRect = stepsSection.getBoundingClientRect();
+                
+                // Only apply sticky behavior if we're within the steps section
+                const withinStepsSection = (
+                    stepsSectionRect.top <= window.innerHeight && 
+                    stepsSectionRect.bottom >= 0
+                );
+                
+                if (!withinStepsSection && isSticky) {
+                    // Remove sticky if we're outside the steps section
+                    isSticky = false;
+                    gsap.set(graphContainer, {
+                        position: 'relative',
+                        top: 'auto',
+                        left: 'auto',
+                        zIndex: 'auto'
+                    });
+                    console.log('Removed sticky - outside steps section');
+                    return;
+                }
+                
+                // Check if graph should be sticky (only when within steps section)
+                const shouldBeSticky = withinStepsSection && (
+                    graphRect.bottom <= window.innerHeight && // Graph bottom would be out of view
+                    lastStepRect.top > window.innerHeight * 0.5 && // Step 05 not reached yet
+                    stepsSectionRect.top <= 0 // Steps section has started scrolling
+                );
+                
+                if (shouldBeSticky && !isSticky) {
+                    // Make sticky
+                    isSticky = true;
+                    gsap.set(graphContainer, {
+                        position: 'fixed',
+                        top: window.innerHeight - 480, // Keep full graph visible
+                        left: stepsRightRect.left,
+                        zIndex: 100,
+                        width: '480px',
+                        height: '480px'
+                    });
+                    console.log('Made sticky');
+                } else if (!shouldBeSticky && isSticky) {
+                    // Remove sticky
+                    isSticky = false;
+                    gsap.set(graphContainer, {
+                        position: 'relative',
+                        top: 'auto',
+                        left: 'auto',
+                        zIndex: 'auto'
+                    });
+                    console.log('Removed sticky');
+                }
+            }
         });
     }
 
-    // Step cards animation
-    gsap.utils.toArray('.step-card, .step-card-last').forEach((card, index) => {
-        gsap.set(card, { opacity: 0, x: -50 });
+    // Responsive version sticky behavior
+    const responsiveGraph = document.querySelector('#graph-responsive');
+    const responsiveStepsLeft = document.querySelector('.steps-content-responsive .steps-left');
+    
+    if (responsiveGraph && responsiveStepsLeft) {
+        const responsiveLastStep = responsiveStepsLeft.querySelector('.step-card-last');
+        
+        if (responsiveLastStep) {
+            ScrollTrigger.create({
+                trigger: responsiveGraph,
+                start: 'bottom bottom',
+                end: () => {
+                    const step05Top = responsiveLastStep.offsetTop;
+                    const graphTop = responsiveGraph.offsetTop;
+                    return `+=${step05Top - graphTop + 200}`;
+                },
+                pin: responsiveGraph,
+                pinSpacing: false,
+                anticipatePin: 1
+            });
+        }
+    }
 
+    // Step cards animation - animate in sequence as they come into view
+    const allStepCards = gsap.utils.toArray('.step-card, .step-card-last');
+    
+    allStepCards.forEach((card, index) => {
+        // Set initial state
+        gsap.set(card, { 
+            opacity: 0, 
+            x: -50,
+            y: 20
+        });
+
+        // Animate in
         gsap.to(card, {
             opacity: 1,
             x: 0,
+            y: 0,
             duration: 0.8,
+            ease: "power2.out",
             scrollTrigger: {
                 trigger: card,
+                start: 'top 85%',
+                end: 'top 60%',
+                once: true,
+                toggleActions: "play none none none"
+            }
+        });
+
+        // Add a subtle highlight effect when the step is in focus
+        ScrollTrigger.create({
+            trigger: card,
+            start: 'top 60%',
+            end: 'bottom 40%',
+            onEnter: () => {
+                gsap.to(card, {
+                    scale: 1.02,
+                    duration: 0.3,
+                    ease: "power2.out"
+                });
+            },
+            onLeave: () => {
+                gsap.to(card, {
+                    scale: 1,
+                    duration: 0.3,
+                    ease: "power2.out"
+                });
+            },
+            onEnterBack: () => {
+                gsap.to(card, {
+                    scale: 1.02,
+                    duration: 0.3,
+                    ease: "power2.out"
+                });
+            },
+            onLeaveBack: () => {
+                gsap.to(card, {
+                    scale: 1,
+                    duration: 0.3,
+                    ease: "power2.out"
+                });
+            }
+        });
+    });
+
+    // Graph level animations - show graph levels as corresponding steps come into view
+    const graphLevels = gsap.utils.toArray('.graph-container img:not(:first-child)');
+    const responsiveGraphLevels = gsap.utils.toArray('#graph-responsive img:not(:first-child)');
+    
+    // Function to animate graph levels
+    function animateGraphLevels(levels, cards) {
+        levels.forEach((level, index) => {
+            if (cards[index]) {
+                gsap.set(level, { 
+                    opacity: 0,
+                    scale: 0.8
+                });
+
+                ScrollTrigger.create({
+                    trigger: cards[index],
+                    start: 'top 70%',
+                    onEnter: () => {
+                        gsap.to(level, {
+                            opacity: 1,
+                            scale: 1,
+                            duration: 0.6,
+                            ease: "back.out(1.7)"
+                        });
+                    },
+                    onLeaveBack: () => {
+                        gsap.to(level, {
+                            opacity: 0,
+                            scale: 0.8,
+                            duration: 0.4,
+                            ease: "power2.inOut"
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    // Apply graph animations for desktop version
+    if (graphLevels.length > 0 && stepCards.length > 0) {
+        const allCards = [...stepCards, lastStepCard].filter(Boolean);
+        animateGraphLevels(graphLevels, allCards);
+    }
+
+    // Apply graph animations for responsive version
+    if (responsiveGraphLevels.length > 0 && responsiveStepsLeft) {
+        const responsiveCards = gsap.utils.toArray('.steps-content-responsive .step-card, .steps-content-responsive .step-card-last');
+        animateGraphLevels(responsiveGraphLevels, responsiveCards);
+    }
+
+    // Timeline line animation
+    const timelineLine = document.querySelector('.timeline-line');
+    if (timelineLine) {
+        gsap.set(timelineLine, { scaleY: 0, transformOrigin: 'top' });
+        
+        gsap.to(timelineLine, {
+            scaleY: 1,
+            duration: 1.5,
+            ease: "power2.out",
+            scrollTrigger: {
+                trigger: timelineLine,
                 start: 'top 80%',
                 once: true
             }
         });
+    }
+
+    // Refresh ScrollTrigger on resize to handle responsive changes
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            ScrollTrigger.refresh();
+        }, 250);
     });
 }
 
