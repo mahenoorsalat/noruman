@@ -2652,7 +2652,7 @@ top: 1240px; */
   }
 
   .qr-modal .modal-box {
-    width: 90%;   /* make it nearly full width */
+    width: 90% !important;   /* make it nearly full width */
     height: 60%; /* let content decide height */
     max-height: 80%; /* avoid overflow */
     padding: 20px 15px;

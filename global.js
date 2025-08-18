@@ -107,43 +107,31 @@ function initStepsAnimations() {
     const graphContainer = document.querySelector('.graph-container');
     const stepsLeft = document.querySelector('.steps-left');
 
-    // ✅ Sticky behavior ONLY for screens wider than 375px
+    // ✅ Sticky behavior ONLY for screens wider than 768px
     ScrollTrigger.matchMedia({
-        "(min-width: 376px)": function () {
+        "(min-width: 769px)": function () {
             if (graphContainer && stepsLeft && lastStepCard && stepCards.length > 0) {
                 ScrollTrigger.refresh();
                 
-                const stickyTrigger = ScrollTrigger.create({
-                    trigger: stepsRight,
-                    start: () => {
-                        const graphRect = graphContainer.getBoundingClientRect();
-                        const stepsRightRect = stepsRight.getBoundingClientRect();
-                        const offset = graphRect.bottom - window.innerHeight;
-                        return `+=${Math.max(0, offset)}`;
-                    },
-                    end: () => {
-                        const step05Rect = lastStepCard.getBoundingClientRect();
-                        const stepsRightRect = stepsRight.getBoundingClientRect();
-                        const step05Top = lastStepCard.offsetTop;
-                        const stepsRightTop = stepsRight.offsetTop;
-                        return `+=${step05Top - stepsRightTop + 200}`;
-                    },
-                    pin: graphContainer,
-                    pinSpacing: false,
-                    anticipatePin: 1,
-                    invalidateOnRefresh: true,
-                    onToggle: self => {
-                        if (self.isActive) {
-                            console.log('Graph is now sticky');
-                            graphContainer.style.zIndex = '100';
-                        } else {
-                            console.log('Graph is no longer sticky');
-                            graphContainer.style.zIndex = '';
-                        }
-                    }
-                });
-
                 let isSticky = false;
+                let originalStyles = {};
+                
+                // Store original styles
+                const storeOriginalStyles = () => {
+                    const computedStyle = window.getComputedStyle(graphContainer);
+                    originalStyles = {
+                        position: computedStyle.position,
+                        top: computedStyle.top,
+                        left: computedStyle.left,
+                        right: computedStyle.right,
+                        width: computedStyle.width,
+                        height: computedStyle.height,
+                        zIndex: computedStyle.zIndex,
+                        transform: computedStyle.transform
+                    };
+                };
+                
+                storeOriginalStyles();
                 
                 ScrollTrigger.create({
                     trigger: stepsSection,
@@ -163,92 +151,162 @@ function initStepsAnimations() {
                         
                         if (!withinStepsSection && isSticky) {
                             isSticky = false;
-                            gsap.set(graphContainer, {
-                                position: 'relative',
-                                top: 'auto',
-                                left: 'auto',
-                                zIndex: 'auto'
-                            });
+                            // Restore original styles
+                            gsap.set(graphContainer, originalStyles);
                             console.log('Removed sticky - outside steps section');
                             return;
                         }
                         
                         const shouldBeSticky = withinStepsSection && (
                             graphRect.bottom <= window.innerHeight &&
-                            lastStepRect.top > window.innerHeight * 0.5 &&
+                            lastStepRect.top > window.innerHeight * 0.3 &&
                             stepsSectionRect.top <= 0
                         );
                         
                         if (shouldBeSticky && !isSticky) {
                             isSticky = true;
-                            // Use CSS centering approach
+                            
+                            // Get current viewport and container dimensions
+                            const viewportWidth = window.innerWidth;
+                            const viewportHeight = window.innerHeight;
                             const currentStepsRightRect = stepsRight.getBoundingClientRect();
+                            
+                            // Calculate center position
+                            const containerWidth = 480; // Fixed width for the graph
+                            const containerHeight = 480; // Fixed height for the graph
+                            
+                            // Center horizontally within the steps-right area
+                            const leftPosition = currentStepsRightRect.left + (currentStepsRightRect.width - containerWidth) / 2;
+                            
+                            // Center vertically in viewport
+                            const topPosition = (viewportHeight - containerHeight) / 2;
                             
                             gsap.set(graphContainer, {
                                 position: 'fixed',
-                                top: window.innerHeight - 480,
-                                left: currentStepsRightRect.left,
+                                top: topPosition + 'px',
+                                left: leftPosition + 'px',
                                 right: 'auto',
+                                bottom: 'auto',
+                                width: containerWidth + 'px',
+                                height: containerHeight + 'px',
                                 zIndex: 100,
-                                width: currentStepsRightRect.width,
-                                height: '480px',
+                                transform: 'none',
                                 display: 'flex',
                                 justifyContent: 'center',
                                 alignItems: 'center'
                             });
                             
-                            // Center the actual graph content
-                            const graphContent = graphContainer.querySelector('*');
-                            if (graphContent) {
-                                gsap.set(graphContent, {
-                                    width: '480px',
-                                    height: '480px'
-                                });
-                            }
+                            // Ensure images are properly positioned - background centered, levels keep CSS positioning
+                            const images = graphContainer.querySelectorAll('img');
+                            images.forEach((img, index) => {
+                                if (index === 0) {
+                                    // First image (background) - center it
+                                    gsap.set(img, {
+                                        position: 'absolute',
+                                        top: '50%',
+                                        left: '50%',
+                                        transform: 'translate(-50%, -50%)',
+                                        maxWidth: '100%',
+                                        maxHeight: '100%',
+                                        width: 'auto',
+                                        height: 'auto'
+                                    });
+                                } else {
+                                    // Other images (levels) - don't override CSS positioning
+                                    gsap.set(img, {
+                                        maxWidth: '100%',
+                                        maxHeight: '100%'
+                                    });
+                                }
+                            });
                             
-                            console.log('Made sticky and centered with flexbox');
+                            console.log('Made sticky and perfectly centered');
                         } else if (!shouldBeSticky && isSticky) {
                             isSticky = false;
-                            gsap.set(graphContainer, {
-                                position: 'relative',
-                                top: 'auto',
-                                left: 'auto',
-                                zIndex: 'auto'
+                            // Restore original styles
+                            gsap.set(graphContainer, originalStyles);
+                            
+                            // Reset images to normal
+                            const images = graphContainer.querySelectorAll('img');
+                            images.forEach((img, index) => {
+                                if (index === 0) {
+                                    // Reset background image
+                                    gsap.set(img, {
+                                        position: 'static',
+                                        top: 'auto',
+                                        left: 'auto',
+                                        transform: 'none',
+                                        maxWidth: 'none',
+                                        maxHeight: 'none',
+                                        width: 'auto',
+                                        height: 'auto'
+                                    });
+                                } else {
+                                    // Level images - minimal reset, let CSS handle positioning
+                                    gsap.set(img, {
+                                        maxWidth: 'none',
+                                        maxHeight: 'none'
+                                    });
+                                }
                             });
+                            
                             console.log('Removed sticky');
                         }
                     }
                 });
+
+                // ✅ Graph level animations for BIG SCREENS ONLY
+                const graphLevels = gsap.utils.toArray('.graph-container img:not(:first-child)');
+                const allCards = gsap.utils.toArray('.steps-content .step-card, .steps-content .step-card-last');
+                
+                if (graphLevels.length > 0 && allCards.length > 0) {
+                    graphLevels.forEach((level, index) => {
+                        if (allCards[index]) {
+                            // Hide levels initially
+                            gsap.set(level, { 
+                                opacity: 0,
+                                scale: 0.8
+                            });
+
+                            ScrollTrigger.create({
+                                trigger: allCards[index],
+                                start: 'top 70%',
+                                onEnter: () => {
+                                    gsap.to(level, {
+                                        opacity: 1,
+                                        scale: 1,
+                                        duration: 0.6,
+                                        ease: "back.out(1.7)"
+                                    });
+                                },
+                                onLeaveBack: () => {
+                                    gsap.to(level, {
+                                        opacity: 0,
+                                        scale: 0.8,
+                                        duration: 0.4,
+                                        ease: "power2.inOut"
+                                    });
+                                }
+                            });
+                        }
+                    });
+                    console.log('Graph level animations set up for big screen');
+                }
             }
         },
 
-        // ✅ On small screens - ensure graph is never sticky
-        "(max-width: 375px)": function () {
-            if (graphContainer) {
-                gsap.set(graphContainer, {
-                    position: 'static',
-                    top: 'auto',
-                    left: 'auto',
-                    zIndex: 'auto',
-                    width: 'auto',
-                    height: 'auto'
-                });
-                console.log('Graph is static for mobile - no sticky behavior');
-            }
+        // ✅ On medium screens (tablets/mobile) - NO animations, just static
+        "(max-width: 768px)": function () {
+            // Do nothing - let CSS handle everything for mobile/tablet
+            console.log('Mobile/tablet - letting CSS handle all positioning');
         }
     });
 
-    // Responsive version - NO sticky behavior, keep it completely normal
+    // ✅ Responsive graph handling - COMPLETELY hands-off, let CSS handle everything
     const responsiveGraph = document.querySelector('#graph-responsive');
     if (responsiveGraph) {
-        // Always keep responsive version static (normal flow)
-        gsap.set(responsiveGraph, {
-            position: 'static',
-            top: 'auto',
-            left: 'auto',
-            zIndex: 'auto'
-        });
-        console.log('Responsive graph is always static - no sticky behavior');
+        console.log('Responsive graph found - letting CSS handle all positioning and styling');
+        // Don't touch anything - let CSS handle it completely
     }
 
     // Step cards animation - KEEP ALL ANIMATIONS
@@ -311,53 +369,6 @@ function initStepsAnimations() {
         });
     });
 
-    // ❌ REMOVED: Graph level animations for triangle chart on PC
-    // This was causing text animation issues on the triangle chart
-    
-    // ✅ KEEP: Only apply graph animations for responsive/mobile version
-    const responsiveGraphLevels = gsap.utils.toArray('#graph-responsive img:not(:first-child)');
-    
-    function animateGraphLevels(levels, cards) {
-        levels.forEach((level, index) => {
-            if (cards[index]) {
-                gsap.set(level, { 
-                    opacity: 0,
-                    scale: 0.8
-                });
-
-                ScrollTrigger.create({
-                    trigger: cards[index],
-                    start: 'top 70%',
-                    onEnter: () => {
-                        gsap.to(level, {
-                            opacity: 1,
-                            scale: 1,
-                            duration: 0.6,
-                            ease: "back.out(1.7)"
-                        });
-                    },
-                    onLeaveBack: () => {
-                        gsap.to(level, {
-                            opacity: 0,
-                            scale: 0.8,
-                            duration: 0.4,
-                            ease: "power2.inOut"
-                        });
-                    }
-                });
-            }
-        });
-    }
-
-    // Apply graph animations ONLY for responsive version (mobile)
-    if (responsiveGraphLevels.length > 0) {
-        const responsiveStepsLeft = document.querySelector('.steps-content-responsive .steps-left');
-        if (responsiveStepsLeft) {
-            const responsiveCards = gsap.utils.toArray('.steps-content-responsive .step-card, .steps-content-responsive .step-card-last');
-            animateGraphLevels(responsiveGraphLevels, responsiveCards);
-        }
-    }
-
     // Timeline line animation - KEEP ALL ANIMATIONS
     const timelineLine = document.querySelector('.timeline-line');
     if (timelineLine) {
@@ -375,14 +386,18 @@ function initStepsAnimations() {
         });
     }
 
-    // Refresh ScrollTrigger on resize
+    // Refresh ScrollTrigger on resize with debouncing
     let resizeTimer;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
             ScrollTrigger.refresh();
+            console.log('ScrollTrigger refreshed after resize');
         }, 250);
     });
+
+    // Final safety check - REMOVED - let CSS handle everything
+    console.log('All responsive graph styling handled by CSS');
 }
 // =====================
 // REQUEST SECTION ANIMATIONS
