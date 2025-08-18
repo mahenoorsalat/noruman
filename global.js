@@ -181,15 +181,32 @@ function initStepsAnimations() {
                         
                         if (shouldBeSticky && !isSticky) {
                             isSticky = true;
+                            // Use CSS centering approach
+                            const currentStepsRightRect = stepsRight.getBoundingClientRect();
+                            
                             gsap.set(graphContainer, {
                                 position: 'fixed',
                                 top: window.innerHeight - 480,
-                                left: stepsRightRect.left,
+                                left: currentStepsRightRect.left,
+                                right: 'auto',
                                 zIndex: 100,
-                                width: '480px',
-                                height: '480px'
+                                width: currentStepsRightRect.width,
+                                height: '480px',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center'
                             });
-                            console.log('Made sticky');
+                            
+                            // Center the actual graph content
+                            const graphContent = graphContainer.querySelector('*');
+                            if (graphContent) {
+                                gsap.set(graphContent, {
+                                    width: '480px',
+                                    height: '480px'
+                                });
+                            }
+                            
+                            console.log('Made sticky and centered with flexbox');
                         } else if (!shouldBeSticky && isSticky) {
                             isSticky = false;
                             gsap.set(graphContainer, {
@@ -294,8 +311,10 @@ function initStepsAnimations() {
         });
     });
 
-    // Graph level animations - KEEP ALL ANIMATIONS
-    const graphLevels = gsap.utils.toArray('.graph-container img:not(:first-child)');
+    // ❌ REMOVED: Graph level animations for triangle chart on PC
+    // This was causing text animation issues on the triangle chart
+    
+    // ✅ KEEP: Only apply graph animations for responsive/mobile version
     const responsiveGraphLevels = gsap.utils.toArray('#graph-responsive img:not(:first-child)');
     
     function animateGraphLevels(levels, cards) {
@@ -330,13 +349,7 @@ function initStepsAnimations() {
         });
     }
 
-    // Apply graph animations for desktop version
-    if (graphLevels.length > 0 && stepCards.length > 0) {
-        const allCards = [...stepCards, lastStepCard].filter(Boolean);
-        animateGraphLevels(graphLevels, allCards);
-    }
-
-    // Apply graph animations for responsive version
+    // Apply graph animations ONLY for responsive version (mobile)
     if (responsiveGraphLevels.length > 0) {
         const responsiveStepsLeft = document.querySelector('.steps-content-responsive .steps-left');
         if (responsiveStepsLeft) {
@@ -371,11 +384,9 @@ function initStepsAnimations() {
         }, 250);
     });
 }
-
 // =====================
 // REQUEST SECTION ANIMATIONS
 // =====================
-
 
 function initRequestAnimations() {
     const requestCards = document.querySelectorAll('.request-card');
@@ -392,10 +403,15 @@ function initRequestAnimations() {
         
         let isExpanded = false;
 
-        // Set initial states
+         // Set initial states
         gsap.set(card, { opacity: 0, y: "+=30"});
         
-        // Initially hide description text (only show title and button)
+        // Set initial overlay opacity to 0.3
+        if (overlay) {
+            gsap.set(overlay, { opacity: 0.3 });
+        }
+        
+        // Initially hide description text completely
         if (description) {
             gsap.set(description, { 
                 opacity: 0, 
@@ -403,18 +419,25 @@ function initRequestAnimations() {
                 overflow: 'hidden',
                 marginTop: 0,
                 paddingTop: 0,
-                paddingBottom: 0
+                paddingBottom: 0,
+                display: 'block'
             });
+        }
+
+        // Ensure toggle button starts with plus icon
+        if (toggleIcon) {
+            toggleIcon.src = "images/5_348.svg"; // plus icon
         }
 
         // Card reveal animation (fade in)
         gsap.to(card, { 
             opacity: 1, 
-              y: "-=30",
+             y: "-=30",
             duration: 0.8,
             scrollTrigger: {
                 trigger: card,
                 start: 'top 80%',
+                
                 once: true
             },
             delay: index * 0.1
@@ -423,11 +446,15 @@ function initRequestAnimations() {
         // Hover animations (only on desktop)
         if (window.innerWidth > 768) {
             card.addEventListener('mouseenter', () => {
-                if (img) gsap.to(img, { scale: 1.05, duration: 0.3 });
+                if (img && !isExpanded) {
+                    gsap.to(img, { scale: 1.05, duration: 0.3 });
+                }
             });
 
             card.addEventListener('mouseleave', () => {
-                if (img) gsap.to(img, { scale: 1, duration: 0.3 });
+                if (img) {
+                    gsap.to(img, { scale: 1, duration: 0.3 });
+                }
             });
         }
 
@@ -435,34 +462,45 @@ function initRequestAnimations() {
         if (toggleButton) {
             toggleButton.addEventListener('click', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 
                 if (!isExpanded) {
                     // Expand: Show description content
                     isExpanded = true;
                     
-                    // Change button icon to minus/close
+                    // Change button icon to minus
                     if (toggleIcon) {
                         toggleIcon.src = "images/5_365.svg"; // minus icon
                     }
                     
                     // Show description with animation
                     if (description) {
-                        gsap.set(description, { height: 'auto' });
+                        // Get natural height
+                        gsap.set(description, { 
+                            height: 'auto',
+                            opacity: 0,
+                            marginTop: 0
+                        });
                         const naturalHeight = description.offsetHeight;
-                        gsap.set(description, { height: 0 });
                         
+                        // Reset to collapsed state
+                        gsap.set(description, { 
+                            height: 0,
+                            opacity: 0,
+                            marginTop: 0
+                        });
+                        
+                        // Animate to expanded state
                         gsap.to(description, { 
                             opacity: 1,
                             height: naturalHeight,
                             marginTop: 10,
-                            paddingTop: 0,
-                            paddingBottom: 0,
                             duration: 0.4,
                             ease: "power2.out"
                         });
                     }
                     
-                    // Slightly darken overlay when expanded
+                    // Change overlay opacity to 0.9 when expanded
                     if (overlay) {
                         gsap.to(overlay, { opacity: 0.9, duration: 0.3 });
                     }
@@ -482,40 +520,17 @@ function initRequestAnimations() {
                             opacity: 0,
                             height: 0,
                             marginTop: 0,
-                            paddingTop: 0,
-                            paddingBottom: 0,
                             duration: 0.3,
                             ease: "power2.in"
                         });
                     }
                     
-                    // Reset overlay opacity
+                    // Reset overlay opacity to 0.3
                     if (overlay) {
-                        gsap.to(overlay, { opacity: 0.8, duration: 0.3 });
+                        gsap.to(overlay, { opacity: 0.3, duration: 0.3 });
                     }
                 }
             });
-        }
-
-        // Handle cards that might have different initial states based on HTML
-        // Check if this card should start expanded (has different icon in HTML)
-        if (toggleIcon && (
-            toggleIcon.src.includes('5_365.svg') || 
-            toggleIcon.src.includes('7_588.svg') || 
-            toggleIcon.src.includes('7_592.svg')
-        )) {
-            // This card starts in expanded state
-            isExpanded = true;
-            if (description) {
-                gsap.set(description, { 
-                    opacity: 1, 
-                    height: 'auto',
-                    marginTop: 10
-                });
-            }
-            if (overlay) {
-                gsap.set(overlay, { opacity: 0.9 });
-            }
         }
     });
 

@@ -919,7 +919,15 @@ top: 1240px; */
   top: 137.5px;
   left: 399.94px;
 }
-
+.qr-modal .modal-box {
+    position: relative;
+    background: #fff;
+    padding: 30px 20px 20px;
+    width: 29%;
+    height: 60%;
+    text-align: center;
+    z-index: 1;
+}
 .graph-container img:nth-child(4) {
   top: 232.2px;
   left: 337.14px;
@@ -2632,6 +2640,23 @@ top: 1240px; */
 }
 
 @media screen and (max-width:400px) {
+  .qr-modal .modal-close img {
+    position: absolute;
+    top: -55px;
+    right: -16px;
+    font-size: 28px;
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .qr-modal .modal-box {
+    width: 90%;   /* make it nearly full width */
+    height: 60%; /* let content decide height */
+    max-height: 80%; /* avoid overflow */
+    padding: 20px 15px;
+  }
   .map-container img {
     margin-left: -80px;
   }
