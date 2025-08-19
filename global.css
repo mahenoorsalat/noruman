@@ -1330,6 +1330,7 @@ top: 1240px; */
 }
 
 .vertical-subtitle {
+  white-space: nowrap;
   position: absolute;
   font-family: 'Libre Baskerville', serif;
   font-size: 14px;

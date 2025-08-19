@@ -90,7 +90,7 @@ function initStepsAnimations() {
     const stepsSection = document.querySelector('.steps-section');
     if (stepsSection) {
         gsap.to(stepsSection, {
-            backgroundColor: '#f8f5f0',
+            backgroundColor: '#bbb8b7',
             scrollTrigger: {
                 trigger: '.steps-section',
                 start: 'top center',
@@ -817,7 +817,7 @@ function initFixedCTA() {
     // Show CTA when hero is half scrolled
     ScrollTrigger.create({
         trigger: '.header',
-        start: 'bottom 50%',
+        start: 'bottom 20%',
         onEnter: () => {
             fixedCTA.classList.add('show');
             gsap.to(fixedCTA, {
