@@ -1260,6 +1260,7 @@ top: 1240px; */
   }
 
   .message-vertical-title span {
+    white-space: inherit;
     transform: none;
   }
 
@@ -2492,10 +2493,10 @@ top: 1240px; */
 @media screen and (max-width:525px) {
 
 
-  .text-first,
-  .text-second {
-    margin-left: -145px;
-  }
+    .text-first, .text-second {
+        white-space: nowrap;
+        margin-left: -35px;
+    }
 
   .gallery-img-2 {
     right: 43px !important;
@@ -2607,9 +2608,10 @@ top: 1240px; */
 }
 
 @media screen and (max-width:450px) {
-.map-container{
-  width: 50% !important;
-}
+    .map-container {
+        margin: 10px;
+        width: 47% !important;
+    }
   .faq-a,
   .faq-q {
     gap: 8px;
@@ -2636,6 +2638,9 @@ top: 1240px; */
 .faq-list {
         width: 35% !important;
     }
+      .entry-text p{
+    margin-left: 0px !important;
+  }
 }
 
 @media screen and (max-width:400px) {
@@ -2684,6 +2689,9 @@ top: 1240px; */
 }
 
 @media screen and (max-width:410px) {
+  .entry-text p{
+    margin-left: 0px !important;
+  }
 
   .text-first p {
     font-size: 37px !important;
