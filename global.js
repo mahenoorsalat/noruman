@@ -184,331 +184,14 @@ function initAboutAnimations() {
 // STEPS SECTION ANIMATIONS
 // =====================
 
-function initStepsAnimations() {
-    // Background color change on scroll
-    const stepsSection = document.querySelector('.steps-section');
-    if (stepsSection) {
-        gsap.to(stepsSection, {
-            backgroundColor: '#a7a5a3',
-            scrollTrigger: {
-                trigger: '.steps-section',
-                start: 'top center',
-                end: 'bottom center',
-                scrub: true
-            }
-        });
-    }
 
-    // Get all step cards and the last step card
-    const stepCards = gsap.utils.toArray('.step-card');
-    const lastStepCard = document.querySelector('.step-card-last');
-    const stepsRight = document.querySelector('.steps-right');
-    const graphContainer = document.querySelector('.graph-container');
-    const stepsLeft = document.querySelector('.steps-left');
-
-    // ✅ Sticky behavior ONLY for screens wider than 768px
-    ScrollTrigger.matchMedia({
-        "(min-width: 769px)": function () {
-            if (graphContainer && stepsLeft && lastStepCard && stepCards.length > 0) {
-                ScrollTrigger.refresh();
-                
-                let isSticky = false;
-                let originalStyles = {};
-                
-                // Store original styles
-                const storeOriginalStyles = () => {
-                    const computedStyle = window.getComputedStyle(graphContainer);
-                    originalStyles = {
-                        position: computedStyle.position,
-                        top: computedStyle.top,
-                        left: computedStyle.left,
-                        right: computedStyle.right,
-                        width: computedStyle.width,
-                        height: computedStyle.height,
-                        zIndex: computedStyle.zIndex,
-                        transform: computedStyle.transform
-                    };
-                };
-                
-                storeOriginalStyles();
-                
-                ScrollTrigger.create({
-                    trigger: stepsSection,
-                    start: 'top bottom',
-                    end: 'bottom top',
-                    onUpdate: self => {
-                        const scrollY = window.scrollY;
-                        const graphRect = graphContainer.getBoundingClientRect();
-                        const stepsRightRect = stepsRight.getBoundingClientRect();
-                        const lastStepRect = lastStepCard.getBoundingClientRect();
-                        const stepsSectionRect = stepsSection.getBoundingClientRect();
-                        
-                        const withinStepsSection = (
-                            stepsSectionRect.top <= window.innerHeight && 
-                            stepsSectionRect.bottom >= 0
-                        );
-                        
-                        if (!withinStepsSection && isSticky) {
-                            isSticky = false;
-                            // Restore original styles
-                            gsap.set(graphContainer, originalStyles);
-                            console.log('Removed sticky - outside steps section');
-                            return;
-                        }
-                        
-                        const shouldBeSticky = withinStepsSection && (
-                            graphRect.bottom <= window.innerHeight &&
-                            lastStepRect.top > window.innerHeight * 0.3 &&
-                            stepsSectionRect.top <= 0
-                        );
-                        
-                        if (shouldBeSticky && !isSticky) {
-                            isSticky = true;
-                            
-                            // Get current viewport and container dimensions
-                            const viewportWidth = window.innerWidth;
-                            const viewportHeight = window.innerHeight;
-                            const currentStepsRightRect = stepsRight.getBoundingClientRect();
-                            
-                            // Calculate center position
-                            const containerWidth = 480; // Fixed width for the graph
-                            const containerHeight = 480; // Fixed height for the graph
-                            
-                            // Center horizontally within the steps-right area
-                            const leftPosition = currentStepsRightRect.left + (currentStepsRightRect.width - containerWidth) / 2;
-                            
-                            // Center vertically in viewport
-                            const topPosition = (viewportHeight - containerHeight) / 2;
-                            
-                            gsap.set(graphContainer, {
-                                position: 'fixed',
-                                top: topPosition + 'px',
-                                left: leftPosition + 'px',
-                                right: 'auto',
-                                bottom: 'auto',
-                                width: containerWidth + 'px',
-                                height: containerHeight + 'px',
-                                zIndex: 100,
-                                transform: 'none',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center'
-                            });
-                            
-                            // Ensure images are properly positioned - background centered, levels keep CSS positioning
-                            const images = graphContainer.querySelectorAll('img');
-                            images.forEach((img, index) => {
-                                if (index === 0) {
-                                    // First image (background) - center it
-                                    gsap.set(img, {
-                                        position: 'absolute',
-                                        top: '50%',
-                                        left: '50%',
-                                        transform: 'translate(-50%, -50%)',
-                                        maxWidth: '100%',
-                                        maxHeight: '100%',
-                                        width: 'auto',
-                                        height: 'auto'
-                                    });
-                                } else {
-                                    // Other images (levels) - don't override CSS positioning
-                                    gsap.set(img, {
-                                        maxWidth: '100%',
-                                        maxHeight: '100%'
-                                    });
-                                }
-                            });
-                            
-                            console.log('Made sticky and perfectly centered');
-                        } else if (!shouldBeSticky && isSticky) {
-                            isSticky = false;
-                            // Restore original styles
-                            gsap.set(graphContainer, originalStyles);
-                            
-                            // Reset images to normal
-                            const images = graphContainer.querySelectorAll('img');
-                            images.forEach((img, index) => {
-                                if (index === 0) {
-                                    // Reset background image
-                                    gsap.set(img, {
-                                        position: 'static',
-                                        top: 'auto',
-                                        left: 'auto',
-                                        transform: 'none',
-                                        maxWidth: 'none',
-                                        maxHeight: 'none',
-                                        width: 'auto',
-                                        height: 'auto'
-                                    });
-                                } else {
-                                    // Level images - minimal reset, let CSS handle positioning
-                                    gsap.set(img, {
-                                        maxWidth: 'none',
-                                        maxHeight: 'none'
-                                    });
-                                }
-                            });
-                            
-                            console.log('Removed sticky');
-                        }
-                    }
-                });
-
-                // ✅ Graph level animations for BIG SCREENS ONLY
-                const graphLevels = gsap.utils.toArray('.graph-container img:not(:first-child)');
-                const allCards = gsap.utils.toArray('.steps-content .step-card, .steps-content .step-card-last');
-                
-                if (graphLevels.length > 0 && allCards.length > 0) {
-                    graphLevels.forEach((level, index) => {
-                        if (allCards[index]) {
-                            // Hide levels initially
-                            gsap.set(level, { 
-                                opacity: 0,
-                                scale: 0.8
-                            });
-
-                            ScrollTrigger.create({
-                                trigger: allCards[index],
-                                start: 'top 70%',
-                                onEnter: () => {
-                                    gsap.to(level, {
-                                        opacity: 1,
-                                        scale: 1,
-                                        duration: 0.6,
-                                        ease: "back.out(1.7)"
-                                    });
-                                },
-                                onLeaveBack: () => {
-                                    gsap.to(level, {
-                                        opacity: 0,
-                                        scale: 0.8,
-                                        duration: 0.4,
-                                        ease: "power2.inOut"
-                                    });
-                                }
-                            });
-                        }
-                    });
-                    console.log('Graph level animations set up for big screen');
-                }
-            }
-        },
-
-        // ✅ On medium screens (tablets/mobile) - NO animations, just static
-        "(max-width: 768px)": function () {
-            // Do nothing - let CSS handle everything for mobile/tablet
-            console.log('Mobile/tablet - letting CSS handle all positioning');
-        }
-    });
-
-    // ✅ Responsive graph handling - COMPLETELY hands-off, let CSS handle everything
-    const responsiveGraph = document.querySelector('#graph-responsive');
-    if (responsiveGraph) {
-        console.log('Responsive graph found - letting CSS handle all positioning and styling');
-        // Don't touch anything - let CSS handle it completely
-    }
-
-    // Step cards animation - KEEP ALL ANIMATIONS
-    const allStepCards = gsap.utils.toArray('.step-card, .step-card-last');
-    
-    allStepCards.forEach((card, index) => {
-        gsap.set(card, { 
-            opacity: 0, 
-            x: -50,
-            y: 20
-        });
-
-        gsap.to(card, {
-            opacity: 1,
-            x: 0,
-            y: 0,
-            duration: 0.8,
-            ease: "power2.out",
-            scrollTrigger: {
-                trigger: card,
-                start: 'top 85%',
-                end: 'top 60%',
-                once: true,
-                toggleActions: "play none none none"
-            }
-        });
-
-        ScrollTrigger.create({
-            trigger: card,
-            start: 'top 60%',
-            end: 'bottom 40%',
-            onEnter: () => {
-                gsap.to(card, {
-                    scale: 1.02,
-                    duration: 0.3,
-                    ease: "power2.out"
-                });
-            },
-            onLeave: () => {
-                gsap.to(card, {
-                    scale: 1,
-                    duration: 0.3,
-                    ease: "power2.out"
-                });
-            },
-            onEnterBack: () => {
-                gsap.to(card, {
-                    scale: 1.02,
-                    duration: 0.3,
-                    ease: "power2.out"
-                });
-            },
-            onLeaveBack: () => {
-                gsap.to(card, {
-                    scale: 1,
-                    duration: 0.3,
-                    ease: "power2.out"
-                });
-            }
-        });
-    });
-
-    // Timeline line animation - KEEP ALL ANIMATIONS
-    const timelineLine = document.querySelector('.timeline-line');
-    if (timelineLine) {
-        gsap.set(timelineLine, { scaleY: 0, transformOrigin: 'top' });
-        
-        gsap.to(timelineLine, {
-            scaleY: 1,
-            duration: 1.5,
-            ease: "power2.out",
-            scrollTrigger: {
-                trigger: timelineLine,
-                start: 'top 80%',
-                once: true
-            }
-        });
-    }
-
-    // Refresh ScrollTrigger on resize with debouncing
-    let resizeTimer;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-            ScrollTrigger.refresh();
-            console.log('ScrollTrigger refreshed after resize');
-        }, 250);
-    });
-
-    // Final safety check - REMOVED - let CSS handle everything
-    console.log('All responsive graph styling handled by CSS');
-}
-
-// =====================
-// STEPS SECTION ANIMATIONS
-// =====================
 
 function initStepsAnimations() {
     // Background color change on scroll
     const stepsSection = document.querySelector('.steps-section');
     if (stepsSection) {
         gsap.to(stepsSection, {
-            backgroundColor: '#a7a5a3',
+            backgroundColor: '#373534',
             scrollTrigger: {
                 trigger: '.steps-section',
                 start: 'top center',
@@ -908,19 +591,32 @@ function initRequestAnimations() {
                     
                     // Show description with animation
                     if (description) {
-                        // Get natural height
-                        gsap.set(description, { 
-                            height: 'auto',
-                            opacity: 0,
-                            marginTop: 0
-                        });
-                        const naturalHeight = description.offsetHeight;
+                        // Clear all GSAP transforms and inline styles
+                        gsap.killTweensOf(description);
+                        description.removeAttribute('style');
                         
-                        // Reset to collapsed state
+                        // Create a temporary clone to measure natural height
+                        const clone = description.cloneNode(true);
+                        clone.style.visibility = 'hidden';
+                        clone.style.position = 'absolute';
+                        clone.style.height = 'auto';
+                        clone.style.width = description.parentElement.offsetWidth + 'px';
+                        clone.style.opacity = '1';
+                        clone.style.display = 'block';
+                        clone.style.marginTop = '10px';
+                        
+                        // Add clone to measure
+                        description.parentElement.appendChild(clone);
+                        const naturalHeight = clone.offsetHeight;
+                        description.parentElement.removeChild(clone);
+                        
+                        // Set initial collapsed state
                         gsap.set(description, { 
                             height: 0,
                             opacity: 0,
-                            marginTop: 0
+                            marginTop: 0,
+                            overflow: 'hidden',
+                            display: 'block'
                         });
                         
                         // Animate to expanded state
@@ -1024,6 +720,7 @@ function initGalleryAnimations() {
     const galleryContainer = document.querySelector('.gallery-scroll-container');
     if (galleryContainer) {
         const images = Array.from(galleryContainer.querySelectorAll('img'));
+        let autoScrollTween;
 
         // Duplicate the images for infinite loop effect
         images.forEach(img => {
@@ -1033,17 +730,151 @@ function initGalleryAnimations() {
 
         // Calculate full scroll width after duplication
         const totalWidth = galleryContainer.scrollWidth / 2; // half because we duplicated
+        
+        // Variables for mouse interaction
+        let isMouseOver = false;
+        let currentX = 0;
 
-        // Continuous infinite scrolling
-        gsap.to(galleryContainer, {
-            x: -totalWidth,
-            duration: 15,
-            ease: "none",
-            repeat: -1,
-            modifiers: {
-                x: gsap.utils.unitize(x => parseFloat(x) % -totalWidth) // loop seamlessly
+        // Create the auto-scroll animation (faster duration)
+        function createAutoScroll() {
+            autoScrollTween = gsap.to(galleryContainer, {
+                x: -totalWidth,
+                duration: 8, // Reduced from 15 to 8 for faster scrolling
+                ease: "none",
+                repeat: -1,
+                modifiers: {
+                    x: gsap.utils.unitize(x => {
+                        currentX = parseFloat(x) % -totalWidth;
+                        return currentX;
+                    })
+                }
+            });
+        }
+
+        // Start auto-scroll
+        createAutoScroll();
+
+        // Mouse wheel scrolling
+        galleryContainer.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            
+            // Pause auto-scroll when user interacts
+            if (autoScrollTween) {
+                autoScrollTween.pause();
+            }
+            
+            // Get current position
+            const currentTransform = gsap.getProperty(galleryContainer, 'x');
+            
+            // Calculate new position based on wheel direction
+            const scrollSpeed = 100; // Adjust this value to control scroll sensitivity
+            const newX = currentTransform - (e.deltaY > 0 ? scrollSpeed : -scrollSpeed);
+            
+            // Apply the new position with wrapping
+            gsap.set(galleryContainer, {
+                x: newX % -totalWidth
+            });
+            
+            // Resume auto-scroll after a delay
+            clearTimeout(galleryContainer.resumeTimeout);
+            galleryContainer.resumeTimeout = setTimeout(() => {
+                if (autoScrollTween) {
+                    // Update the tween's starting position to current position
+                    const currentPos = gsap.getProperty(galleryContainer, 'x');
+                    autoScrollTween.kill();
+                    
+                    gsap.to(galleryContainer, {
+                        x: currentPos - totalWidth,
+                        duration: 8,
+                        ease: "none",
+                        repeat: -1,
+                        modifiers: {
+                            x: gsap.utils.unitize(x => {
+                                currentX = parseFloat(x) % -totalWidth;
+                                return currentX;
+                            })
+                        }
+                    });
+                }
+            }, 2000); // Resume after 2 seconds of no interaction
+        });
+
+        // Mouse drag scrolling
+        let isDragging = false;
+        let startX = 0;
+        let scrollLeft = 0;
+
+        galleryContainer.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.pageX;
+            scrollLeft = gsap.getProperty(galleryContainer, 'x');
+            galleryContainer.style.cursor = 'grabbing';
+            
+            // Pause auto-scroll
+            if (autoScrollTween) {
+                autoScrollTween.pause();
             }
         });
+
+        galleryContainer.addEventListener('mouseleave', () => {
+            if (isDragging) {
+                isDragging = false;
+                galleryContainer.style.cursor = 'grab';
+                
+                // Resume auto-scroll
+                resumeAutoScroll();
+            }
+        });
+
+        galleryContainer.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                galleryContainer.style.cursor = 'grab';
+                
+                // Resume auto-scroll
+                resumeAutoScroll();
+            }
+        });
+
+        galleryContainer.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            
+            const x = e.pageX;
+            const walk = (x - startX) * 2; // Multiply by 2 for faster dragging
+            const newX = scrollLeft + walk;
+            
+            gsap.set(galleryContainer, {
+                x: newX % -totalWidth
+            });
+        });
+
+        // Function to resume auto-scroll
+        function resumeAutoScroll() {
+            clearTimeout(galleryContainer.resumeTimeout);
+            galleryContainer.resumeTimeout = setTimeout(() => {
+                const currentPos = gsap.getProperty(galleryContainer, 'x');
+                if (autoScrollTween) {
+                    autoScrollTween.kill();
+                }
+                
+                autoScrollTween = gsap.to(galleryContainer, {
+                    x: currentPos - totalWidth,
+                    duration: 8,
+                    ease: "none",
+                    repeat: -1,
+                    modifiers: {
+                        x: gsap.utils.unitize(x => {
+                            currentX = parseFloat(x) % -totalWidth;
+                            return currentX;
+                        })
+                    }
+                });
+            }, 1500);
+        }
+
+        // Set cursor style
+        galleryContainer.style.cursor = 'grab';
 
         // Optional: fade/scale images on section enter
         images.forEach((img, index) => {
@@ -1061,6 +892,34 @@ function initGalleryAnimations() {
                 delay: index * 0.2
             });
         });
+
+        // Touch support for mobile
+        let touchStartX = 0;
+        let touchScrollLeft = 0;
+
+        galleryContainer.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].pageX;
+            touchScrollLeft = gsap.getProperty(galleryContainer, 'x');
+            
+            // Pause auto-scroll
+            if (autoScrollTween) {
+                autoScrollTween.pause();
+            }
+        }, { passive: true });
+
+        galleryContainer.addEventListener('touchmove', (e) => {
+            const touchX = e.touches[0].pageX;
+            const walk = (touchX - touchStartX) * 2;
+            const newX = touchScrollLeft + walk;
+            
+            gsap.set(galleryContainer, {
+                x: newX % -totalWidth
+            });
+        }, { passive: true });
+
+        galleryContainer.addEventListener('touchend', () => {
+            resumeAutoScroll();
+        }, { passive: true });
     }
 }
 
