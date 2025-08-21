@@ -721,6 +721,8 @@ function initGalleryAnimations() {
     if (galleryContainer) {
         const images = Array.from(galleryContainer.querySelectorAll('img'));
         let autoScrollTween;
+        let isInteracting = false;
+        let currentIndex = 0;
 
         // Duplicate the images for infinite loop effect
         images.forEach(img => {
@@ -728,200 +730,248 @@ function initGalleryAnimations() {
             galleryContainer.appendChild(clone);
         });
 
-        // Calculate full scroll width after duplication
-        const totalWidth = galleryContainer.scrollWidth / 2; // half because we duplicated
+        // Calculate dimensions
+        const allImages = Array.from(galleryContainer.querySelectorAll('img'));
+        const imageWidth = images[0].offsetWidth + 10; // including gap
+        const totalImages = images.length;
+        const totalWidth = imageWidth * totalImages;
         
-        // Variables for mouse interaction
-        let isMouseOver = false;
-        let currentX = 0;
+        let currentPosition = 0;
+        let animationId;
 
-        // Create the auto-scroll animation (faster duration)
-        function createAutoScroll() {
-            autoScrollTween = gsap.to(galleryContainer, {
-                x: -totalWidth,
-                duration: 8, // Reduced from 15 to 8 for faster scrolling
-                ease: "none",
-                repeat: -1,
-                modifiers: {
-                    x: gsap.utils.unitize(x => {
-                        currentX = parseFloat(x) % -totalWidth;
-                        return currentX;
-                    })
+        // Auto-scroll function
+        function startAutoScroll() {
+            if (isInteracting) return;
+            
+            const speed = 1; // pixels per frame
+            
+            function animate() {
+                if (isInteracting) return;
+                
+                currentPosition += speed;
+                
+                // Reset position when we've scrolled through one full set
+                if (currentPosition >= totalWidth) {
+                    currentPosition = 0;
                 }
-            });
+                
+                galleryContainer.style.transform = `translateX(-${currentPosition}px)`;
+                animationId = requestAnimationFrame(animate);
+            }
+            
+            animate();
         }
 
-        // Start auto-scroll
-        createAutoScroll();
-
-        // Mouse wheel scrolling
-        galleryContainer.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            
-            // Pause auto-scroll when user interacts
-            if (autoScrollTween) {
-                autoScrollTween.pause();
+        // Stop auto-scroll
+        function stopAutoScroll() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
             }
-            
-            // Get current position
-            const currentTransform = gsap.getProperty(galleryContainer, 'x');
-            
-            // Calculate new position based on wheel direction
-            const scrollSpeed = 100; // Adjust this value to control scroll sensitivity
-            const newX = currentTransform - (e.deltaY > 0 ? scrollSpeed : -scrollSpeed);
-            
-            // Apply the new position with wrapping
-            gsap.set(galleryContainer, {
-                x: newX % -totalWidth
-            });
-            
-            // Resume auto-scroll after a delay
-            clearTimeout(galleryContainer.resumeTimeout);
-            galleryContainer.resumeTimeout = setTimeout(() => {
-                if (autoScrollTween) {
-                    // Update the tween's starting position to current position
-                    const currentPos = gsap.getProperty(galleryContainer, 'x');
-                    autoScrollTween.kill();
-                    
-                    gsap.to(galleryContainer, {
-                        x: currentPos - totalWidth,
-                        duration: 8,
-                        ease: "none",
-                        repeat: -1,
-                        modifiers: {
-                            x: gsap.utils.unitize(x => {
-                                currentX = parseFloat(x) % -totalWidth;
-                                return currentX;
-                            })
-                        }
-                    });
-                }
-            }, 2000); // Resume after 2 seconds of no interaction
-        });
+        }
 
-        // Mouse drag scrolling
-        let isDragging = false;
-        let startX = 0;
-        let scrollLeft = 0;
-
-        galleryContainer.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            startX = e.pageX;
-            scrollLeft = gsap.getProperty(galleryContainer, 'x');
-            galleryContainer.style.cursor = 'grabbing';
+        // Snap to nearest image (swiper behavior)
+        function snapToNearestImage() {
+            const nearestIndex = Math.round(currentPosition / imageWidth);
+            const targetPosition = nearestIndex * imageWidth;
             
-            // Pause auto-scroll
-            if (autoScrollTween) {
-                autoScrollTween.pause();
+            // Handle wrapping
+            if (targetPosition >= totalWidth) {
+                currentPosition = 0;
+                galleryContainer.style.transform = `translateX(0px)`;
+            } else {
+                currentPosition = targetPosition;
+                galleryContainer.style.transition = 'transform 0.3s ease-out';
+                galleryContainer.style.transform = `translateX(-${currentPosition}px)`;
+                
+                // Remove transition after animation
+                setTimeout(() => {
+                    galleryContainer.style.transition = '';
+                }, 300);
             }
+        }
+
+        // Mouse enter/leave events
+        galleryContainer.addEventListener('mouseenter', () => {
+            isInteracting = true;
+            stopAutoScroll();
         });
 
         galleryContainer.addEventListener('mouseleave', () => {
-            if (isDragging) {
-                isDragging = false;
-                galleryContainer.style.cursor = 'grab';
+            if (!isDragging) {
+                isInteracting = false;
+                snapToNearestImage();
                 
-                // Resume auto-scroll
-                resumeAutoScroll();
+                // Resume auto-scroll after a short delay
+                setTimeout(() => {
+                    startAutoScroll();
+                }, 500);
             }
         });
 
-        galleryContainer.addEventListener('mouseup', () => {
-            if (isDragging) {
-                isDragging = false;
-                galleryContainer.style.cursor = 'grab';
-                
-                // Resume auto-scroll
-                resumeAutoScroll();
+        // Mouse wheel scrolling (swiper behavior)
+        galleryContainer.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            
+            if (!isInteracting) {
+                isInteracting = true;
+                stopAutoScroll();
             }
+            
+            // Snap to next/previous image based on scroll direction
+            if (e.deltaY > 0) {
+                // Scroll down - next image
+                currentIndex = (currentIndex + 1) % totalImages;
+            } else {
+                // Scroll up - previous image
+                currentIndex = (currentIndex - 1 + totalImages) % totalImages;
+            }
+            
+            currentPosition = currentIndex * imageWidth;
+            galleryContainer.style.transition = 'transform 0.3s ease-out';
+            galleryContainer.style.transform = `translateX(-${currentPosition}px)`;
+            
+            // Remove transition after animation
+            setTimeout(() => {
+                galleryContainer.style.transition = '';
+            }, 300);
+            
+            // Resume auto-scroll after delay
+            clearTimeout(galleryContainer.resumeTimeout);
+            galleryContainer.resumeTimeout = setTimeout(() => {
+                isInteracting = false;
+                startAutoScroll();
+            }, 2000);
         });
 
-        galleryContainer.addEventListener('mousemove', (e) => {
+        // Mouse drag functionality
+        let isDragging = false;
+        let startX = 0;
+        let startPosition = 0;
+
+        galleryContainer.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            isDragging = true;
+            isInteracting = true;
+            startX = e.clientX;
+            startPosition = currentPosition;
+            galleryContainer.style.cursor = 'grabbing';
+            stopAutoScroll();
+        });
+
+        document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
             e.preventDefault();
             
-            const x = e.pageX;
-            const walk = (x - startX) * 2; // Multiply by 2 for faster dragging
-            const newX = scrollLeft + walk;
+            const deltaX = startX - e.clientX;
+            let newPosition = startPosition + deltaX;
             
-            gsap.set(galleryContainer, {
-                x: newX % -totalWidth
-            });
+            // Allow smooth dragging with wrapping
+            if (newPosition < 0) {
+                newPosition = totalWidth + newPosition;
+            } else if (newPosition >= totalWidth) {
+                newPosition = newPosition - totalWidth;
+            }
+            
+            currentPosition = newPosition;
+            galleryContainer.style.transform = `translateX(-${currentPosition}px)`;
         });
 
-        // Function to resume auto-scroll
-        function resumeAutoScroll() {
-            clearTimeout(galleryContainer.resumeTimeout);
-            galleryContainer.resumeTimeout = setTimeout(() => {
-                const currentPos = gsap.getProperty(galleryContainer, 'x');
-                if (autoScrollTween) {
-                    autoScrollTween.kill();
-                }
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                galleryContainer.style.cursor = 'grab';
                 
-                autoScrollTween = gsap.to(galleryContainer, {
-                    x: currentPos - totalWidth,
-                    duration: 8,
-                    ease: "none",
-                    repeat: -1,
-                    modifiers: {
-                        x: gsap.utils.unitize(x => {
-                            currentX = parseFloat(x) % -totalWidth;
-                            return currentX;
-                        })
-                    }
-                });
-            }, 1500);
-        }
-
-        // Set cursor style
-        galleryContainer.style.cursor = 'grab';
-
-        // Optional: fade/scale images on section enter
-        images.forEach((img, index) => {
-            gsap.set(img, { opacity: 0, scale: 0.8 });
-
-            gsap.to(img, {
-                opacity: 1,
-                scale: 1,
-                duration: 0.8,
-                scrollTrigger: {
-                    trigger: '.gallery-section',
-                    start: 'top 80%',
-                    once: true
-                },
-                delay: index * 0.2
-            });
+                // Snap to nearest image
+                snapToNearestImage();
+                
+                // Update current index based on position
+                currentIndex = Math.round(currentPosition / imageWidth) % totalImages;
+                
+                // Resume auto-scroll after delay
+                setTimeout(() => {
+                    isInteracting = false;
+                    startAutoScroll();
+                }, 1000);
+            }
         });
 
-        // Touch support for mobile
+        // Touch events for mobile
         let touchStartX = 0;
-        let touchScrollLeft = 0;
+        let touchStartPosition = 0;
 
         galleryContainer.addEventListener('touchstart', (e) => {
-            touchStartX = e.touches[0].pageX;
-            touchScrollLeft = gsap.getProperty(galleryContainer, 'x');
-            
-            // Pause auto-scroll
-            if (autoScrollTween) {
-                autoScrollTween.pause();
-            }
+            isInteracting = true;
+            touchStartX = e.touches[0].clientX;
+            touchStartPosition = currentPosition;
+            stopAutoScroll();
         }, { passive: true });
 
         galleryContainer.addEventListener('touchmove', (e) => {
-            const touchX = e.touches[0].pageX;
-            const walk = (touchX - touchStartX) * 2;
-            const newX = touchScrollLeft + walk;
+            const deltaX = touchStartX - e.touches[0].clientX;
+            let newPosition = touchStartPosition + deltaX;
             
-            gsap.set(galleryContainer, {
-                x: newX % -totalWidth
-            });
+            // Handle wrapping
+            if (newPosition < 0) {
+                newPosition = totalWidth + newPosition;
+            } else if (newPosition >= totalWidth) {
+                newPosition = newPosition - totalWidth;
+            }
+            
+            currentPosition = newPosition;
+            galleryContainer.style.transform = `translateX(-${currentPosition}px)`;
         }, { passive: true });
 
         galleryContainer.addEventListener('touchend', () => {
-            resumeAutoScroll();
+            // Snap to nearest image
+            snapToNearestImage();
+            
+            // Update current index
+            currentIndex = Math.round(currentPosition / imageWidth) % totalImages;
+            
+            // Resume auto-scroll after delay
+            setTimeout(() => {
+                isInteracting = false;
+                startAutoScroll();
+            }, 1000);
         }, { passive: true });
+
+        // Set initial styles
+        galleryContainer.style.cursor = 'grab';
+        galleryContainer.style.userSelect = 'none';
+        galleryContainer.style.display = 'flex';
+
+        // Prevent context menu
+        galleryContainer.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+
+        // Image fade-in animation
+        images.forEach((img, index) => {
+            img.style.opacity = '0';
+            img.style.transform = 'scale(0.8)';
+            
+            setTimeout(() => {
+                img.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+                img.style.opacity = '1';
+                img.style.transform = 'scale(1)';
+            }, index * 200);
+        });
+
+        // Start auto-scroll initially
+        startAutoScroll();
+
+        // Cleanup function
+        return () => {
+            stopAutoScroll();
+            clearTimeout(galleryContainer.resumeTimeout);
+        };
     }
 }
+
+// Initialize when DOM is ready
+
+
 
 
 // =====================
