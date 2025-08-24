@@ -5,13 +5,21 @@
   --background-dark-overlay: rgba(40, 40, 40, 0.6);
   --border-color: #e8e8e8;
 }
-
-
 html, body {
   overflow-x: hidden;
   max-width: 100vw;
+  width: 100%;
 }
 
+/* Add this to prevent any element from exceeding viewport */
+* {
+  box-sizing: border-box;
+}
+
+*:not(html):not(body) {
+  max-width: 100%;
+
+}
 body {
   margin: 0 auto;
   font-family: 'Noto Sans JP', sans-serif;
@@ -21,6 +29,19 @@ body {
   width: 100%;
   max-width: 1920px;
 }
+.header-links,
+.hero-cta-bar,
+.step-card,
+.faq-list,
+.map-container,
+.recruit-info,
+.entry-button {
+  max-width: 100%;
+  width: 100%;
+}
+
+
+
 
 .bg {
   width: 100%;
@@ -165,8 +186,7 @@ p {
 }
 
 .header-links {
-  width: 960px;
-  /* height: 160px; */
+
   text-align: left;
   position: absolute;
   top: 650px;
@@ -331,7 +351,7 @@ p {
 .hero-cta-bar {
   display: flex;
   height: 160px;
-  width: 960px;
+ 
   background-color: var(--background-light);
   align-self: flex-start;
 }
@@ -711,6 +731,10 @@ top: 1240px; */
 }
 
 @media (max-width: 768px) {
+  html, body {
+  overflow-x: hidden;
+  width: 100%; /* Add this */
+}
   .background-title {
     font-size: 80px;
   }
@@ -809,8 +833,7 @@ top: 1240px; */
   margin-bottom: 109px;
   background: rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(2px);
-  /* border: 1px solid rgba(255, 255, 255, 0.5); */
-  width: 540px;
+ 
   height: 225px;
   box-sizing: border-box;
 }
@@ -1353,9 +1376,7 @@ top: 1240px; */
   letter-spacing: 0.7px;
 }
 
-.recruit-info {
-  width: 800px;
-}
+
 
 .recruit-table {
   border-top: 1px solid var(--border-color);
@@ -1382,7 +1403,7 @@ top: 1240px; */
 
 .map-container {
   margin-top: 80px;
-  width: 1080px;
+
   height: 320px;
   margin-bottom: 160px;
 }
@@ -1457,6 +1478,29 @@ top: 1240px; */
 }
 
 @media (max-width: 768px) {
+  .step-card,
+  .step-card-last {
+    width: calc(100vw - 40px);
+    max-width: 540px;
+  }
+  
+  .faq-list {
+    width: calc(100vw - 40px);
+    max-width: 800px;
+  }
+   .decor-line-yellow,
+  .decor-line-red {
+    transform: none; /* Remove problematic transforms */
+    left: 0;
+    right: 0;
+    margin-left: 0;
+  }
+  
+  .background-decor {
+    margin-left: 0;
+    left: 0;
+    right: 0;
+  }
   .details-section {
     padding: 80px 20px;
   }
@@ -2562,7 +2606,7 @@ top: 1240px; */
   }
 
     .table-value {
-        width: 43%;
+        width: 90%;
     }
   .steps-left{
         padding: 20px;
@@ -2605,7 +2649,7 @@ top: 1240px; */
 @media screen and (max-width:450px) {
     .map-container {
         margin: 10px;
-        width: 47% !important;
+        width: 90% !important;
     }
   .faq-a,
   .faq-q {
@@ -2634,7 +2678,7 @@ top: 1240px; */
   margin-top: 0px;
 }
 .faq-list {
-        width: 43% !important;
+        width: 90% !important;
     }
       .entry-text p{
     margin-left: 0px !important;
@@ -2687,9 +2731,7 @@ top: 1240px; */
 }
 
 @media screen and (max-width:410px) {
-  *{
-    width: 100%;
-  }
+
   .entry-text p{
     margin-left: 0px !important;
   }

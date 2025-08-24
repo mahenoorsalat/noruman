@@ -720,252 +720,128 @@ function initGalleryAnimations() {
     const galleryContainer = document.querySelector('.gallery-scroll-container');
     if (galleryContainer) {
         const images = Array.from(galleryContainer.querySelectorAll('img'));
-        let autoScrollTween;
         let isInteracting = false;
         let currentIndex = 0;
 
-        // Duplicate the images for infinite loop effect
-        images.forEach(img => {
-            const clone = img.cloneNode(true);
-            galleryContainer.appendChild(clone);
-        });
-
-        // Calculate dimensions
-        const allImages = Array.from(galleryContainer.querySelectorAll('img'));
-        const imageWidth = images[0].offsetWidth + 10; // including gap
-        const totalImages = images.length;
-        const totalWidth = imageWidth * totalImages;
-        
-        let currentPosition = 0;
-        let animationId;
-
-        // Auto-scroll function
-        function startAutoScroll() {
-            if (isInteracting) return;
-            
-            const speed = 1; // pixels per frame
-            
-            function animate() {
-                if (isInteracting) return;
-                
-                currentPosition += speed;
-                
-                // Reset position when we've scrolled through one full set
-                if (currentPosition >= totalWidth) {
-                    currentPosition = 0;
+        // Wait for images to load before calculating dimensions
+        const imageLoadPromises = images.map(img => {
+            return new Promise(resolve => {
+                if (img.complete) {
+                    resolve();
+                } else {
+                    img.onload = resolve;
+                    img.onerror = resolve;
                 }
-                
-                galleryContainer.style.transform = `translateX(-${currentPosition}px)`;
-                animationId = requestAnimationFrame(animate);
-            }
-            
-            animate();
-        }
-
-        // Stop auto-scroll
-        function stopAutoScroll() {
-            if (animationId) {
-                cancelAnimationFrame(animationId);
-                animationId = null;
-            }
-        }
-
-        // Snap to nearest image (swiper behavior)
-        function snapToNearestImage() {
-            const nearestIndex = Math.round(currentPosition / imageWidth);
-            const targetPosition = nearestIndex * imageWidth;
-            
-            // Handle wrapping
-            if (targetPosition >= totalWidth) {
-                currentPosition = 0;
-                galleryContainer.style.transform = `translateX(0px)`;
-            } else {
-                currentPosition = targetPosition;
-                galleryContainer.style.transition = 'transform 0.3s ease-out';
-                galleryContainer.style.transform = `translateX(-${currentPosition}px)`;
-                
-                // Remove transition after animation
-                setTimeout(() => {
-                    galleryContainer.style.transition = '';
-                }, 300);
-            }
-        }
-
-        // Mouse enter/leave events
-        galleryContainer.addEventListener('mouseenter', () => {
-            isInteracting = true;
-            stopAutoScroll();
+            });
         });
 
-        galleryContainer.addEventListener('mouseleave', () => {
-            if (!isDragging) {
-                isInteracting = false;
-                snapToNearestImage();
-                
-                // Resume auto-scroll after a short delay
-                setTimeout(() => {
-                    startAutoScroll();
-                }, 500);
-            }
-        });
+        Promise.all(imageLoadPromises).then(() => {
+            // Duplicate the images for infinite loop effect
+            images.forEach(img => {
+                const clone = img.cloneNode(true);
+                galleryContainer.appendChild(clone);
+            });
 
-        // Mouse wheel scrolling (swiper behavior)
-        galleryContainer.addEventListener('wheel', (e) => {
-            e.preventDefault();
+            // Calculate dimensions after images are loaded and cloned
+            const allImages = Array.from(galleryContainer.querySelectorAll('img'));
             
-            if (!isInteracting) {
-                isInteracting = true;
+            // Calculate actual width of each image including gap
+            let imageWidth = 0;
+            if (images.length > 0) {
+                const firstImg = images[0];
+                const computedStyle = window.getComputedStyle(firstImg);
+                imageWidth = firstImg.offsetWidth + 10; // including gap
+            }
+            
+            const totalImages = images.length;
+            const totalWidth = imageWidth * totalImages;
+
+            let currentPosition = 0;
+            let animationId;
+
+            // Auto-scroll function
+            function startAutoScroll() {
+                if (isInteracting) return;
+
+                const speed = 1; // pixels per frame
+
+                function animate() {
+                    if (isInteracting) return;
+
+                    currentPosition += speed;
+
+                    // Reset position when we've scrolled through one full set
+                    if (currentPosition >= totalWidth) {
+                        currentPosition = 0;
+                    }
+
+                    galleryContainer.style.transform = `translateX(-${currentPosition}px)`;
+                    animationId = requestAnimationFrame(animate);
+                }
+
+                animate();
+            }
+
+            // Stop auto-scroll
+            function stopAutoScroll() {
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+            }
+
+            // Snap to nearest image (swiper behavior)
+            function snapToNearestImage() {
+                const nearestIndex = Math.round(currentPosition / imageWidth);
+                const targetPosition = nearestIndex * imageWidth;
+
+                // Handle wrapping
+                if (targetPosition >= totalWidth) {
+                    currentPosition = 0;
+                    galleryContainer.style.transform = `translateX(0px)`;
+                } else {
+                    currentPosition = targetPosition;
+                    galleryContainer.style.transition = 'transform 0.3s ease-out';
+                    galleryContainer.style.transform = `translateX(-${currentPosition}px)`;
+
+                    // Remove transition after animation
+                    setTimeout(() => {
+                        galleryContainer.style.transition = '';
+                    }, 300);
+                }
+            }
+
+            // Set initial styles - remove cursor pointer since no interaction
+            galleryContainer.style.cursor = 'default';
+            galleryContainer.style.userSelect = 'none';
+            galleryContainer.style.display = 'flex';
+            galleryContainer.style.pointerEvents = 'none'; // Disable all pointer events
+
+            // Image fade-in animation
+            images.forEach((img, index) => {
+                img.style.opacity = '0';
+                img.style.transform = 'scale(0.8)';
+
+                setTimeout(() => {
+                    img.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+                    img.style.opacity = '1';
+                    img.style.transform = 'scale(1)';
+                }, index * 200);
+            });
+
+            // Start auto-scroll after everything is set up
+            setTimeout(() => {
+                startAutoScroll();
+            }, 100);
+
+            // Cleanup function
+            return () => {
                 stopAutoScroll();
-            }
-            
-            // Snap to next/previous image based on scroll direction
-            if (e.deltaY > 0) {
-                // Scroll down - next image
-                currentIndex = (currentIndex + 1) % totalImages;
-            } else {
-                // Scroll up - previous image
-                currentIndex = (currentIndex - 1 + totalImages) % totalImages;
-            }
-            
-            currentPosition = currentIndex * imageWidth;
-            galleryContainer.style.transition = 'transform 0.3s ease-out';
-            galleryContainer.style.transform = `translateX(-${currentPosition}px)`;
-            
-            // Remove transition after animation
-            setTimeout(() => {
-                galleryContainer.style.transition = '';
-            }, 300);
-            
-            // Resume auto-scroll after delay
-            clearTimeout(galleryContainer.resumeTimeout);
-            galleryContainer.resumeTimeout = setTimeout(() => {
-                isInteracting = false;
-                startAutoScroll();
-            }, 2000);
+                if (galleryContainer.resumeTimeout) {
+                    clearTimeout(galleryContainer.resumeTimeout);
+                }
+            };
         });
-
-        // Mouse drag functionality
-        let isDragging = false;
-        let startX = 0;
-        let startPosition = 0;
-
-        galleryContainer.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            isDragging = true;
-            isInteracting = true;
-            startX = e.clientX;
-            startPosition = currentPosition;
-            galleryContainer.style.cursor = 'grabbing';
-            stopAutoScroll();
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-            
-            const deltaX = startX - e.clientX;
-            let newPosition = startPosition + deltaX;
-            
-            // Allow smooth dragging with wrapping
-            if (newPosition < 0) {
-                newPosition = totalWidth + newPosition;
-            } else if (newPosition >= totalWidth) {
-                newPosition = newPosition - totalWidth;
-            }
-            
-            currentPosition = newPosition;
-            galleryContainer.style.transform = `translateX(-${currentPosition}px)`;
-        });
-
-        document.addEventListener('mouseup', () => {
-            if (isDragging) {
-                isDragging = false;
-                galleryContainer.style.cursor = 'grab';
-                
-                // Snap to nearest image
-                snapToNearestImage();
-                
-                // Update current index based on position
-                currentIndex = Math.round(currentPosition / imageWidth) % totalImages;
-                
-                // Resume auto-scroll after delay
-                setTimeout(() => {
-                    isInteracting = false;
-                    startAutoScroll();
-                }, 1000);
-            }
-        });
-
-        // Touch events for mobile
-        let touchStartX = 0;
-        let touchStartPosition = 0;
-
-        galleryContainer.addEventListener('touchstart', (e) => {
-            isInteracting = true;
-            touchStartX = e.touches[0].clientX;
-            touchStartPosition = currentPosition;
-            stopAutoScroll();
-        }, { passive: true });
-
-        galleryContainer.addEventListener('touchmove', (e) => {
-            const deltaX = touchStartX - e.touches[0].clientX;
-            let newPosition = touchStartPosition + deltaX;
-            
-            // Handle wrapping
-            if (newPosition < 0) {
-                newPosition = totalWidth + newPosition;
-            } else if (newPosition >= totalWidth) {
-                newPosition = newPosition - totalWidth;
-            }
-            
-            currentPosition = newPosition;
-            galleryContainer.style.transform = `translateX(-${currentPosition}px)`;
-        }, { passive: true });
-
-        galleryContainer.addEventListener('touchend', () => {
-            // Snap to nearest image
-            snapToNearestImage();
-            
-            // Update current index
-            currentIndex = Math.round(currentPosition / imageWidth) % totalImages;
-            
-            // Resume auto-scroll after delay
-            setTimeout(() => {
-                isInteracting = false;
-                startAutoScroll();
-            }, 1000);
-        }, { passive: true });
-
-        // Set initial styles
-        galleryContainer.style.cursor = 'grab';
-        galleryContainer.style.userSelect = 'none';
-        galleryContainer.style.display = 'flex';
-
-        // Prevent context menu
-        galleryContainer.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-        });
-
-        // Image fade-in animation
-        images.forEach((img, index) => {
-            img.style.opacity = '0';
-            img.style.transform = 'scale(0.8)';
-            
-            setTimeout(() => {
-                img.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
-                img.style.opacity = '1';
-                img.style.transform = 'scale(1)';
-            }, index * 200);
-        });
-
-        // Start auto-scroll initially
-        startAutoScroll();
-
-        // Cleanup function
-        return () => {
-            stopAutoScroll();
-            clearTimeout(galleryContainer.resumeTimeout);
-        };
     }
 }
 
